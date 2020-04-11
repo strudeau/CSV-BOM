@@ -216,13 +216,13 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 						dimZ = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False))
 						if prefs["sortDims"]:
 							dimSorted = sorted([dimX, dimY, dimZ])
-							bbZ = "{0:.3f}".format(dimSorted[0])
-							bbX = "{0:.3f}".format(dimSorted[1])
-							bbY = "{0:.3f}".format(dimSorted[2])
+							bbZ = "{0:.8f}".format(dimSorted[0])
+							bbX = "{0:.8f}".format(dimSorted[1])
+							bbY = "{0:.8f}".format(dimSorted[2])
 						else:
-							bbX = "{0:.3f}".format(dimX)
-							bbY = "{0:.3f}".format(dimY)
-							bbZ = "{0:.3f}".format(dimZ)
+							bbX = "{0:.8f}".format(dimX)
+							bbY = "{0:.8f}".format(dimY)
+							bbZ = "{0:.8f}".format(dimZ)
 	
 						if prefs["splitDims"]:
 							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + '",'
@@ -299,8 +299,8 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 					dims = [dimZ, dimX, dimY]
 
 				partStr = ' '  # leading space
-				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.3f}".format(dims[1])).ljust(9)  # width
-				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.3f}".format(dims[2])).ljust(7)  # length
+				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.8f}".format(dims[1])).ljust(9)  # width
+				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.8f}".format(dims[2])).ljust(7)  # length
 
 				partStr += name
 				partStr += ' (thickness: ' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.3f}".format(dims[0])) + defaultUnit + ')'
