@@ -157,6 +157,8 @@ class BOMCommandCreatedEventHandler(adsk.core.CommandCreatedEventHandler):
 		cmd.inputChanged.add(onInputChanged)
 		handlers.append(onInputChanged)
 
+def myround(x, base=5):
+    return base * round(x/base)
 
 # Event handler for the execute event.
 class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
@@ -215,6 +217,9 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 						dimX = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["x"], defaultUnit, False))
 						dimY = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["y"], defaultUnit, False))
 						dimZ = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False))
+						dimY = myround(dimY, 1/128)
+						dimX = myround(dimX, 1/128)
+						dimZ = myround(dimZ, 1/128)
 						if prefs["sortDims"]:
 							dimSorted = sorted([dimX, dimY, dimZ])
 							bbZ = "{0:.8f}".format(dimSorted[0])
@@ -238,6 +243,9 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 						dimX = design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["x"], defaultUnit, False)
 						dimY = design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["y"], defaultUnit, False)
 						dimZ = design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False)
+						dimY = myround(dimY, 1/128)
+						dimX = myround(dimX, 1/128)
+						dimZ = myround(dimZ, 1/128)
 
 						if prefs["splitDims"]:
 							csvStr += '"' + dimY.replace('"', '""') + '",'
@@ -295,6 +303,9 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 				dimX = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["x"], defaultUnit, False))
 				dimY = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["y"], defaultUnit, False))
 				dimZ = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False))
+				dimY = myround(dimY, 1/128)
+				dimX = myround(dimX, 1/128)
+				dimZ = myround(dimZ, 1/128)
 
 				if prefs["sortDims"]:
 					dims = sorted([dimX, dimY, dimZ])
