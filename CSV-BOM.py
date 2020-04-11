@@ -172,7 +172,7 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 	def collectData(self, design, bom, prefs):
 		csvStr = ''
 		defaultUnit = design.fusionUnitsManager.defaultLengthUnits
-		csvHeader = ["Label", "Qty"]
+		csvHeader = []
 		if prefs["incVol"]:
 			csvHeader.append("Volume cm^3")
 		if prefs["incBoundDims"]:
@@ -182,14 +182,16 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 				csvHeader.append("Height")
 			else:
 				csvHeader.append("Dimension " + defaultUnit)
+		csvHeader.append("Qty")
+		if prefs["incMaterial"]:
+			csvHeader.append("Material")
+		csvHeader.append("Label")
 		if prefs["incArea"]:
 			csvHeader.append("Area cm^2")
 		if prefs["incMass"]:
 			csvHeader.append("Mass kg")
 		if prefs["incDensity"]:
 			csvHeader.append("Density kg/cm^2")
-		if prefs["incMaterial"]:
-			csvHeader.append("Material")
 		if prefs["incDesc"]:
 			csvHeader.append("Description")
 		for k in csvHeader:
@@ -200,7 +202,6 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 			name = self.filterFusionCompNameInserts(item["name"])
 			if prefs["ignoreUnderscorePrefComp"] is False and prefs["underscorePrefixStrip"] is True and name[0] == '_':
 				name = name[1:]
-			csvStr += '"' + name + '","' + self.replacePointDelimterOnPref(prefs["useComma"], item["instances"]) + '",'
 			if prefs["incVol"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], item["volume"]) + '",'
 			if prefs["incBoundDims"]:
@@ -254,14 +255,16 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 						csvStr += "0" + ','
 					else:
 						csvStr += "0" + ','
+			csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], item["instances"]) + '",'
+			if prefs["incMaterial"]:
+				csvStr += '"' + item["material"] + '",'
+			csvStr += '"' + name + '","'
 			if prefs["incArea"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.2f}".format(item["area"])) + '",'
 			if prefs["incMass"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.5f}".format(item["mass"])) + '",'
 			if prefs["incDensity"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.5f}".format(item["density"])) + '",'
-			if prefs["incMaterial"]:
-				csvStr += '"' + item["material"] + '",'
 			if prefs["incDesc"]:
 				csvStr += '"' + item["desc"] + '",'
 			csvStr += '\n'
