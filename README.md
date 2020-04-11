@@ -1,4 +1,11 @@
-# CSV-BOM
+# CSV-BOM-WOODWORKING
+
+The CSV-BOM-WOODWORKING is a fork of the original CSV-BOM add-in for Fusion 360 with a focus on generating a BOM csv file compatible, "out of the box", with cutlist optimizer (https://www.cutlistoptimizer.com/). It adds the following:
+- Orders the CSV columns to work with cutlist optimimzer.
+- Changes columns headers to work with custlist optimizer.
+- Increase measurements precisions to 8 digits in order to allow to have a precision up to 1/128 of an inch.
+- round measurements to 1/128 of an inch. A precision meaningful for woodworkers.
+
 Creates a bill of material and cut lists from the browser components tree in Autodesk Fusion360.
 
 ## General Usage Instructions
