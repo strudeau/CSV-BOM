@@ -157,6 +157,8 @@ class BOMCommandCreatedEventHandler(adsk.core.CommandCreatedEventHandler):
 		cmd.inputChanged.add(onInputChanged)
 		handlers.append(onInputChanged)
 
+def myround(x, base=5):
+    return base * round(x/base)
 
 # Event handler for the execute event.
 class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
@@ -172,24 +174,26 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 	def collectData(self, design, bom, prefs):
 		csvStr = ''
 		defaultUnit = design.fusionUnitsManager.defaultLengthUnits
-		csvHeader = ["Part name", "Quantity"]
+		csvHeader = []
 		if prefs["incVol"]:
 			csvHeader.append("Volume cm^3")
 		if prefs["incBoundDims"]:
 			if prefs["splitDims"]:
-				csvHeader.append("Width " + defaultUnit)
-				csvHeader.append("Length " + defaultUnit)
-				csvHeader.append("Height " + defaultUnit)
+				csvHeader.append("Length")
+				csvHeader.append("Width")
+				csvHeader.append("Height")
 			else:
 				csvHeader.append("Dimension " + defaultUnit)
+		csvHeader.append("Qty")
+		if prefs["incMaterial"]:
+			csvHeader.append("Material")
+		csvHeader.append("Label")
 		if prefs["incArea"]:
 			csvHeader.append("Area cm^2")
 		if prefs["incMass"]:
 			csvHeader.append("Mass kg")
 		if prefs["incDensity"]:
 			csvHeader.append("Density kg/cm^2")
-		if prefs["incMaterial"]:
-			csvHeader.append("Material")
 		if prefs["incDesc"]:
 			csvHeader.append("Description")
 		for k in csvHeader:
@@ -200,36 +204,58 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 			name = self.filterFusionCompNameInserts(item["name"])
 			if prefs["ignoreUnderscorePrefComp"] is False and prefs["underscorePrefixStrip"] is True and name[0] == '_':
 				name = name[1:]
-			csvStr += '"' + name + '","' + self.replacePointDelimterOnPref(prefs["useComma"], item["instances"]) + '",'
 			if prefs["incVol"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], item["volume"]) + '",'
 			if prefs["incBoundDims"]:
 				dim = 0
+				footInchDispFormat = app.preferences.unitAndValuePreferences.footAndInchDisplayFormat
+				
 				for k in item["boundingBox"]:
 					dim += item["boundingBox"][k]
 				if dim > 0:
-					dimX = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["x"], defaultUnit, False))
-					dimY = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["y"], defaultUnit, False))
-					dimZ = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False))
-					if prefs["sortDims"]:
-						dimSorted = sorted([dimX, dimY, dimZ])
-						bbZ = "{0:.3f}".format(dimSorted[0])
-						bbX = "{0:.3f}".format(dimSorted[1])
-						bbY = "{0:.3f}".format(dimSorted[2])
+					if footInchDispFormat == 0:
+						dimX = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["x"], defaultUnit, False))
+						dimY = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["y"], defaultUnit, False))
+						dimZ = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False))
+						dimY = myround(dimY, 1/128)
+						dimX = myround(dimX, 1/128)
+						dimZ = myround(dimZ, 1/128)
+						if prefs["sortDims"]:
+							dimSorted = sorted([dimX, dimY, dimZ])
+							bbZ = "{0:.8f}".format(dimSorted[0])
+							bbX = "{0:.8f}".format(dimSorted[1])
+							bbY = "{0:.8f}".format(dimSorted[2])
+						else:
+							bbX = "{0:.8f}".format(dimX)
+							bbY = "{0:.8f}".format(dimY)
+							bbZ = "{0:.8f}".format(dimZ)
+	
+						if prefs["splitDims"]:
+							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbY) + '",'
+							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + '",'
+							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbZ) + '",'
+						else:
+							dims += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + ' x '
+							dims += self.replacePointDelimterOnPref(prefs["useComma"], bbY) + ' x '
+							dims += self.replacePointDelimterOnPref(prefs["useComma"], bbZ)
+							csvStr += dims + '",'
 					else:
-						bbX = "{0:.3f}".format(dimX)
-						bbY = "{0:.3f}".format(dimY)
-						bbZ = "{0:.3f}".format(dimZ)
+						dimX = design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["x"], defaultUnit, False)
+						dimY = design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["y"], defaultUnit, False)
+						dimZ = design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False)
+						dimY = myround(dimY, 1/128)
+						dimX = myround(dimX, 1/128)
+						dimZ = myround(dimZ, 1/128)
 
-					if prefs["splitDims"]:
-						csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + '",'
-						csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbY) + '",'
-						csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbZ) + '",'
-					else:
-						dims += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + ' x '
-						dims += self.replacePointDelimterOnPref(prefs["useComma"], bbY) + ' x '
-						dims += self.replacePointDelimterOnPref(prefs["useComma"], bbZ)
-						csvStr += dims + '",'
+						if prefs["splitDims"]:
+							csvStr += '"' + dimY.replace('"', '""') + '",'
+							csvStr += '"' + dimX.replace('"', '""') + '",'
+							csvStr += '"' + dimZ.replace('"', '""') + '",'
+						else:
+							dims += '"' + dimX.replace('"', '""') + ' x '
+							dims += dimY.replace('"', '""') + ' x '
+							dims += dimZ.replace('"', '""')
+							csvStr += dims + '",'						
 				else:
 					if prefs["splitDims"]:
 						csvStr += "0" + ','
@@ -237,14 +263,16 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 						csvStr += "0" + ','
 					else:
 						csvStr += "0" + ','
+			csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], item["instances"]) + '",'
+			if prefs["incMaterial"]:
+				csvStr += '"' + item["material"] + '",'
+			csvStr += '"' + name + '","'
 			if prefs["incArea"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.2f}".format(item["area"])) + '",'
 			if prefs["incMass"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.5f}".format(item["mass"])) + '",'
 			if prefs["incDensity"]:
 				csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.5f}".format(item["density"])) + '",'
-			if prefs["incMaterial"]:
-				csvStr += '"' + item["material"] + '",'
 			if prefs["incDesc"]:
 				csvStr += '"' + item["desc"] + '",'
 			csvStr += '\n'
@@ -275,6 +303,9 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 				dimX = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["x"], defaultUnit, False))
 				dimY = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["y"], defaultUnit, False))
 				dimZ = float(design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False))
+				dimY = myround(dimY, 1/128)
+				dimX = myround(dimX, 1/128)
+				dimZ = myround(dimZ, 1/128)
 
 				if prefs["sortDims"]:
 					dims = sorted([dimX, dimY, dimZ])
@@ -282,8 +313,8 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 					dims = [dimZ, dimX, dimY]
 
 				partStr = ' '  # leading space
-				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.3f}".format(dims[1])).ljust(9)  # width
-				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.3f}".format(dims[2])).ljust(7)  # length
+				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.8f}".format(dims[2])).ljust(7)  # length
+				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.8f}".format(dims[1])).ljust(9)  # width
 
 				partStr += name
 				partStr += ' (thickness: ' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.3f}".format(dims[0])) + defaultUnit + ')'
