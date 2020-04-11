@@ -172,14 +172,14 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 	def collectData(self, design, bom, prefs):
 		csvStr = ''
 		defaultUnit = design.fusionUnitsManager.defaultLengthUnits
-		csvHeader = ["Part name", "Quantity"]
+		csvHeader = ["Label", "Qty"]
 		if prefs["incVol"]:
 			csvHeader.append("Volume cm^3")
 		if prefs["incBoundDims"]:
 			if prefs["splitDims"]:
-				csvHeader.append("Width " + defaultUnit)
-				csvHeader.append("Length " + defaultUnit)
-				csvHeader.append("Height " + defaultUnit)
+				csvHeader.append("Length")
+				csvHeader.append("Width")
+				csvHeader.append("Height")
 			else:
 				csvHeader.append("Dimension " + defaultUnit)
 		if prefs["incArea"]:
@@ -225,8 +225,8 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 							bbZ = "{0:.8f}".format(dimZ)
 	
 						if prefs["splitDims"]:
-							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + '",'
 							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbY) + '",'
+							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + '",'
 							csvStr += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbZ) + '",'
 						else:
 							dims += '"' + self.replacePointDelimterOnPref(prefs["useComma"], bbX) + ' x '
@@ -239,8 +239,8 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 						dimZ = design.fusionUnitsManager.formatInternalValue(item["boundingBox"]["z"], defaultUnit, False)
 
 						if prefs["splitDims"]:
-							csvStr += '"' + dimX.replace('"', '""') + '",'
 							csvStr += '"' + dimY.replace('"', '""') + '",'
+							csvStr += '"' + dimX.replace('"', '""') + '",'
 							csvStr += '"' + dimZ.replace('"', '""') + '",'
 						else:
 							dims += '"' + dimX.replace('"', '""') + ' x '
@@ -299,8 +299,8 @@ class BOMCommandExecuteHandler(adsk.core.CommandEventHandler):
 					dims = [dimZ, dimX, dimY]
 
 				partStr = ' '  # leading space
-				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.8f}".format(dims[1])).ljust(9)  # width
 				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.8f}".format(dims[2])).ljust(7)  # length
+				partStr += self.replacePointDelimterOnPref(prefs["useComma"], "{0:.8f}".format(dims[1])).ljust(9)  # width
 
 				partStr += name
 				partStr += ' (thickness: ' + self.replacePointDelimterOnPref(prefs["useComma"], "{0:.3f}".format(dims[0])) + defaultUnit + ')'
